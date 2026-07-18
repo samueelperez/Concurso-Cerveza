@@ -155,9 +155,16 @@ export function VotingBoard({
                 {beer.number}
               </span>
               {locked && (
-                <span className="mt-1 line-clamp-2 text-sm font-bold leading-tight">
-                  {beer.realName ?? `Cerveza ${beer.number}`}
-                </span>
+                <>
+                  <span className="mt-1 line-clamp-2 text-sm font-bold leading-tight">
+                    {beer.realName ?? `Cerveza ${beer.number}`}
+                  </span>
+                  {beer.groupName && (
+                    <span className="text-[0.65rem] font-medium text-primary">
+                      de {beer.groupName}
+                    </span>
+                  )}
+                </>
               )}
               <span className="mt-1.5">
                 {myScore !== null ? (

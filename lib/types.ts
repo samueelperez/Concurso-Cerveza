@@ -9,17 +9,24 @@ export interface ParticipantAdmin extends Participant {
   votesCount: number;
 }
 
-/** Cerveza tal y como la ve un votante: el nombre real solo llega si ya se reveló. */
+export interface Group {
+  id: number;
+  name: string;
+}
+
+/** Cerveza tal y como la ve un votante: nombre real y pareja solo llegan si ya se reveló. */
 export interface BeerPublic {
   id: number;
   number: number;
   realName: string | null;
+  groupName: string | null;
 }
 
 export interface BeerAdmin {
   id: number;
   number: number;
   realName: string;
+  groupId: number | null;
   votesCount: number;
   avg: number;
 }
@@ -34,6 +41,7 @@ export interface BeerResult {
   id: number;
   number: number;
   realName: string;
+  groupName: string | null;
   avg: number;
   votesCount: number;
   total: number;

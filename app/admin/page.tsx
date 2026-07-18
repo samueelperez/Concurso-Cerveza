@@ -4,7 +4,7 @@ import { AdminPanel } from "@/components/admin/admin-panel";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { SetupNotice } from "@/components/setup-notice";
 import { isAdmin } from "@/lib/auth";
-import { getBeersAdmin, getContestStatus, getParticipantsAdmin } from "@/lib/data";
+import { getBeersAdmin, getContestStatus, getGroups, getParticipantsAdmin } from "@/lib/data";
 import { isDbConfigured } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -21,16 +21,17 @@ export default async function AdminPage() {
     return <AdminLogin />;
   }
 
-  const [status, beers, participants] = await Promise.all([
+  const [status, beers, participants, groups] = await Promise.all([
     getContestStatus(),
     getBeersAdmin(),
     getParticipantsAdmin(),
+    getGroups(),
   ]);
 
   return (
     <main className="flex w-full flex-1 flex-col">
       <AutoRefresh intervalMs={10000} />
-      <AdminPanel status={status} beers={beers} participants={participants} />
+      <AdminPanel status={status} beers={beers} participants={participants} groups={groups} />
     </main>
   );
 }

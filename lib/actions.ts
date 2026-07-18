@@ -130,6 +130,50 @@ export async function updateBeerName(id: number, realName: string): Promise<Acti
   }
 }
 
+export async function updateBeerGroup(
+  id: number,
+  groupId: number | null
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await ensureSchema();
+    await sql()`UPDATE beers SET group_id = ${groupId} WHERE id = ${id}`;
+    refresh();
+    return { ok: true };
+  } catch {
+    return fail("No se pudo vincular la pareja.");
+  }
+}
+
+export async function addGroup(name: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await ensureSchema();
+    const trimmed = name.trim();
+    if (!trimmed) return fail("El nombre no puede estar vacío.");
+    await sql()`INSERT INTO groups (name) VALUES (${trimmed})`;
+    refresh();
+    return { ok: true };
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("groups_name_key")) {
+      return fail("Esa pareja ya existe.");
+    }
+    return fail("No se pudo añadir la pareja.");
+  }
+}
+
+export async function deleteGroup(id: number): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await ensureSchema();
+    await sql()`DELETE FROM groups WHERE id = ${id}`;
+    refresh();
+    return { ok: true };
+  } catch {
+    return fail("No se pudo eliminar la pareja.");
+  }
+}
+
 export async function deleteBeer(id: number): Promise<ActionResult> {
   try {
     await requireAdmin();

@@ -7,6 +7,7 @@ import { useGSAP } from "@gsap/react";
 import {
   Beer,
   Check,
+  HeartHandshake,
   Home,
   Loader2,
   Lock,
@@ -33,14 +34,23 @@ import { ConfirmIconButton } from "./confirm-icon-button";
 import { formatScore } from "@/components/fx/count-up";
 import {
   addBeer,
+  addGroup,
   addParticipant,
   deleteBeer,
+  deleteGroup,
   deleteParticipant,
   logoutAdmin,
   setContestStatus,
+  updateBeerGroup,
   updateBeerName,
 } from "@/lib/actions";
-import type { ActionResult, BeerAdmin, ContestStatus, ParticipantAdmin } from "@/lib/types";
+import type {
+  ActionResult,
+  BeerAdmin,
+  ContestStatus,
+  Group,
+  ParticipantAdmin,
+} from "@/lib/types";
 
 gsap.registerPlugin(useGSAP);
 
@@ -87,7 +97,7 @@ function useAction() {
   return { run, isPending };
 }
 
-function BeerRow({ beer }: { beer: BeerAdmin }) {
+function BeerRow({ beer, groups }: { beer: BeerAdmin; groups: Group[] }) {
   const { run } = useAction();
   const [name, setName] = useState(beer.realName);
 
@@ -98,7 +108,7 @@ function BeerRow({ beer }: { beer: BeerAdmin }) {
   };
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-start gap-2.5">
       <span className="tabular flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 font-heading text-sm font-extrabold text-primary">
         {beer.number}
       </span>
@@ -111,6 +121,25 @@ function BeerRow({ beer }: { beer: BeerAdmin }) {
           placeholder="Nombre real (secreto)"
           className="h-9 rounded-lg text-sm"
         />
+        <select
+          value={beer.groupId ?? ""}
+          onChange={(e) =>
+            run(
+              () =>
+                updateBeerGroup(beer.id, e.target.value === "" ? null : Number(e.target.value)),
+              e.target.value === "" ? `Nº ${beer.number} sin pareja` : `Pareja vinculada a la Nº ${beer.number}`
+            )
+          }
+          aria-label={`Pareja de la cerveza ${beer.number}`}
+          className="mt-1.5 h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground [&>option]:bg-popover"
+        >
+          <option value="">— Sin pareja —</option>
+          {groups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
+          ))}
+        </select>
         <p className="mt-0.5 pl-1 text-[0.7rem] text-muted-foreground">
           {beer.votesCount === 0
             ? "Sin votos aún"
@@ -129,10 +158,12 @@ export function AdminPanel({
   status,
   beers,
   participants,
+  groups,
 }: {
   status: ContestStatus;
   beers: BeerAdmin[];
   participants: ParticipantAdmin[];
+  groups: Group[];
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -142,6 +173,7 @@ export function AdminPanel({
   const [newBeerNumber, setNewBeerNumber] = useState("");
   const [newBeerName, setNewBeerName] = useState("");
   const [newParticipant, setNewParticipant] = useState("");
+  const [newGroup, setNewGroup] = useState("");
 
   const totalVotes = beers.reduce((sum, b) => sum + b.votesCount, 0);
   const expectedVotes = beers.length * participants.length;
@@ -184,6 +216,13 @@ export function AdminPanel({
     if (!name) return;
     run(() => addParticipant(name), `${name} añadido`);
     setNewParticipant("");
+  };
+
+  const submitGroup = () => {
+    const name = newGroup.trim();
+    if (!name) return;
+    run(() => addGroup(name), `Pareja "${name}" añadida`);
+    setNewGroup("");
   };
 
   return (
@@ -308,7 +347,7 @@ export function AdminPanel({
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {beers.map((beer) => (
-            <BeerRow key={beer.id} beer={beer} />
+            <BeerRow key={beer.id} beer={beer} groups={groups} />
           ))}
           <div className="mt-1 flex items-center gap-2.5 border-t border-border pt-3">
             <Input
@@ -340,6 +379,51 @@ export function AdminPanel({
           <p className="text-[0.7rem] text-muted-foreground">
             El nombre real nunca se envía a los móviles hasta que bloquees la votación.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Parejas */}
+      <Card data-admin-section className="glass">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <HeartHandshake className="size-4 text-primary" /> Parejas
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          {groups.map((g) => {
+            const linked = beers.filter((b) => b.groupId === g.id).map((b) => b.number);
+            return (
+              <div key={g.id} className="flex items-center gap-2.5">
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{g.name}</span>
+                <span className="tabular shrink-0 text-xs text-muted-foreground">
+                  {linked.length > 0 ? `Nº ${linked.join(", ")}` : "sin cerveza"}
+                </span>
+                <ConfirmIconButton
+                  label={`Eliminar pareja ${g.name}`}
+                  onConfirm={() => run(() => deleteGroup(g.id), `Pareja eliminada`)}
+                />
+              </div>
+            );
+          })}
+          <div className="mt-1 flex items-center gap-2.5 border-t border-border pt-3">
+            <Input
+              value={newGroup}
+              onChange={(e) => setNewGroup(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitGroup()}
+              placeholder="Nueva pareja (p. ej. Javier y Jimena)"
+              aria-label="Nombre de la nueva pareja"
+              className="h-9 flex-1 rounded-lg text-sm"
+            />
+            <Button
+              size="icon"
+              aria-label="Añadir pareja"
+              className="size-9 shrink-0 rounded-lg"
+              disabled={isPending}
+              onClick={submitGroup}
+            >
+              <Plus className="size-4" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

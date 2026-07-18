@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { Pool } from "pg";
-import { DEFAULT_BEER_COUNT, DEFAULT_PARTICIPANTS } from "./constants";
+import { DEFAULT_BEER_COUNT, DEFAULT_GROUPS, DEFAULT_PARTICIPANTS } from "./constants";
 
 export function isDbConfigured(): boolean {
   return Boolean(process.env.DATABASE_URL);
@@ -76,11 +76,21 @@ async function init() {
     )`;
 
   await q`
+    CREATE TABLE IF NOT EXISTS groups (
+      id SERIAL PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL
+    )`;
+
+  await q`
     CREATE TABLE IF NOT EXISTS beers (
       id SERIAL PRIMARY KEY,
       number INTEGER UNIQUE NOT NULL,
-      real_name TEXT NOT NULL DEFAULT ''
+      real_name TEXT NOT NULL DEFAULT '',
+      group_id INTEGER REFERENCES groups(id) ON DELETE SET NULL
     )`;
+
+  // Migración para bases de datos creadas antes de que existieran las parejas
+  await q`ALTER TABLE beers ADD COLUMN IF NOT EXISTS group_id INTEGER REFERENCES groups(id) ON DELETE SET NULL`;
 
   await q`
     CREATE TABLE IF NOT EXISTS votes (
@@ -116,6 +126,13 @@ async function init() {
   if (Number(participantRow.count) === 0) {
     for (const name of DEFAULT_PARTICIPANTS) {
       await q`INSERT INTO participants (name) VALUES (${name}) ON CONFLICT (name) DO NOTHING`;
+    }
+  }
+
+  const [groupRow] = await q`SELECT COUNT(*)::int AS count FROM groups`;
+  if (Number(groupRow.count) === 0) {
+    for (const name of DEFAULT_GROUPS) {
+      await q`INSERT INTO groups (name) VALUES (${name}) ON CONFLICT (name) DO NOTHING`;
     }
   }
 
