@@ -7,14 +7,15 @@ export const MIN_SCORE = 1;
 export const MAX_SCORE = 10;
 
 export const DEFAULT_PARTICIPANTS = [
-  "Samu",
-  "Álvaro",
-  "Dani",
-  "Javi",
-  "Carlos",
-  "Marta",
-  "Laura",
-  "Pablo",
+  "Javier",
+  "Jimena",
+  "David",
+  "Ana",
+  "Samuel",
+  "Rocío",
+  "Ramón Javier",
+  "Nieves",
+  "Alba",
 ];
 
 export const DEFAULT_BEER_COUNT = 6;
