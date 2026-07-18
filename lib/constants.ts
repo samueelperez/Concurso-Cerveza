@@ -20,3 +20,11 @@ export const DEFAULT_PARTICIPANTS = [
 ];
 
 export const DEFAULT_BEER_COUNT = 6;
+
+export const DEFAULT_GROUPS = [
+  "Javier y Jimena",
+  "Nieves y Ramón Javier",
+  "Samuel y Rocío",
+  "David y Ana",
+  "Alba",
+];

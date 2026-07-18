@@ -40,6 +40,11 @@ function Podium({ ranking }: { ranking: BeerResult[] }) {
             <span className="line-clamp-2 text-sm font-bold leading-tight">
               {beerLabel(beer)}
             </span>
+            {beer.groupName && (
+              <span className="line-clamp-2 text-[0.7rem] font-semibold leading-tight text-primary">
+                {beer.groupName}
+              </span>
+            )}
             <span className="text-[0.7rem] text-muted-foreground">Nº {beer.number}</span>
           </div>
           <div
@@ -154,8 +159,18 @@ export function ResultsDashboard({ results }: { results: ContestResults }) {
         </h1>
         {winner && (
           <p className="mt-2 text-sm text-muted-foreground">
-            Gana <span className="font-bold text-foreground">{beerLabel(winner)}</span> con
-            un <span className="tabular font-bold text-primary">{formatScore(winner.avg)}</span> de
+            {winner.groupName ? (
+              <>
+                {winner.groupName.includes(" y ") ? "Ganan" : "Gana"}{" "}
+                <span className="font-bold text-foreground">{winner.groupName}</span> con{" "}
+                <span className="font-bold text-foreground">{beerLabel(winner)}</span>
+              </>
+            ) : (
+              <>
+                Gana <span className="font-bold text-foreground">{beerLabel(winner)}</span>
+              </>
+            )}{" "}
+            — <span className="tabular font-bold text-primary">{formatScore(winner.avg)}</span> de
             media 🏆
           </p>
         )}
@@ -180,6 +195,11 @@ export function ResultsDashboard({ results }: { results: ContestResults }) {
                       {formatScore(beer.avg)}
                     </span>
                   </div>
+                  {beer.groupName && (
+                    <span className="block truncate text-[0.65rem] font-medium text-primary">
+                      {beer.groupName}
+                    </span>
+                  )}
                   <div className="mt-1 flex items-center gap-2">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                       <div

@@ -6,6 +6,7 @@ import type {
   BeerResult,
   ContestResults,
   ContestStatus,
+  Group,
   Participant,
   ParticipantAdmin,
   Vote,
@@ -24,18 +25,29 @@ export async function getParticipants(): Promise<Participant[]> {
 }
 
 /**
- * Cervezas para la vista pública. El nombre real solo viaja al cliente cuando
- * la votación ya está bloqueada o finalizada: durante la votación es null.
+ * Cervezas para la vista pública. El nombre real y la pareja solo viajan al
+ * cliente cuando la votación ya está bloqueada o finalizada.
  */
 export async function getBeersPublic(status: ContestStatus): Promise<BeerPublic[]> {
   await ensureSchema();
-  const rows = await sql()`SELECT id, number, real_name FROM beers ORDER BY number ASC`;
+  const rows = await sql()`
+    SELECT b.id, b.number, b.real_name, g.name AS group_name
+    FROM beers b
+    LEFT JOIN groups g ON g.id = b.group_id
+    ORDER BY b.number ASC`;
   const revealed = status !== "voting";
   return rows.map((r) => ({
     id: r.id as number,
     number: r.number as number,
     realName: revealed ? ((r.real_name as string) || null) : null,
+    groupName: revealed ? ((r.group_name as string | null) ?? null) : null,
   }));
+}
+
+export async function getGroups(): Promise<Group[]> {
+  await ensureSchema();
+  const rows = await sql()`SELECT id, name FROM groups ORDER BY name ASC`;
+  return rows.map((r) => ({ id: r.id as number, name: r.name as string }));
 }
 
 export async function getAllVotes(): Promise<Vote[]> {
@@ -57,12 +69,14 @@ export async function getResults(): Promise<ContestResults> {
       b.id,
       b.number,
       b.real_name,
+      g.name AS group_name,
       COALESCE(AVG(v.score), 0)::float AS avg,
       COUNT(v.id)::int AS votes_count,
       COALESCE(SUM(v.score), 0)::float AS total
     FROM beers b
+    LEFT JOIN groups g ON g.id = b.group_id
     LEFT JOIN votes v ON v.beer_id = b.id
-    GROUP BY b.id
+    GROUP BY b.id, g.name
     ORDER BY avg DESC, votes_count DESC, total DESC, b.number ASC`;
 
   const [stats] = await q`
@@ -78,6 +92,7 @@ export async function getResults(): Promise<ContestResults> {
         id: r.id as number,
         number: r.number as number,
         realName: (r.real_name as string) || "",
+        groupName: (r.group_name as string | null) ?? null,
         avg: r.avg as number,
         votesCount: r.votes_count as number,
         total: r.total as number,
@@ -96,6 +111,7 @@ export async function getBeersAdmin(): Promise<BeerAdmin[]> {
       b.id,
       b.number,
       b.real_name,
+      b.group_id,
       COUNT(v.id)::int AS votes_count,
       COALESCE(AVG(v.score), 0)::float AS avg
     FROM beers b
@@ -106,6 +122,7 @@ export async function getBeersAdmin(): Promise<BeerAdmin[]> {
     id: r.id as number,
     number: r.number as number,
     realName: r.real_name as string,
+    groupId: (r.group_id as number | null) ?? null,
     votesCount: r.votes_count as number,
     avg: r.avg as number,
   }));
