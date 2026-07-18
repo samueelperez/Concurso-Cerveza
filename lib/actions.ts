@@ -29,10 +29,12 @@ export async function castVote(
 ): Promise<ActionResult> {
   try {
     await ensureSchema();
+    const halfSteps = score * 2;
     if (
-      !Number.isInteger(score) ||
+      !Number.isFinite(score) ||
       score < MIN_SCORE ||
       score > MAX_SCORE ||
+      !Number.isInteger(halfSteps) ||
       !Number.isInteger(participantId) ||
       !Number.isInteger(beerId)
     ) {

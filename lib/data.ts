@@ -41,7 +41,7 @@ export async function getBeersPublic(status: ContestStatus): Promise<BeerPublic[
 export async function getAllVotes(): Promise<Vote[]> {
   await ensureSchema();
   const rows = await sql()`
-    SELECT participant_id, beer_id, score FROM votes`;
+    SELECT participant_id, beer_id, score::float AS score FROM votes`;
   return rows.map((r) => ({
     participantId: r.participant_id as number,
     beerId: r.beer_id as number,
@@ -59,7 +59,7 @@ export async function getResults(): Promise<ContestResults> {
       b.real_name,
       COALESCE(AVG(v.score), 0)::float AS avg,
       COUNT(v.id)::int AS votes_count,
-      COALESCE(SUM(v.score), 0)::int AS total
+      COALESCE(SUM(v.score), 0)::float AS total
     FROM beers b
     LEFT JOIN votes v ON v.beer_id = b.id
     GROUP BY b.id

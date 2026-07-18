@@ -14,8 +14,9 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Slider } from "@/components/ui/slider";
+import { formatVote } from "@/components/fx/count-up";
 import { castVote } from "@/lib/actions";
-import { MAX_SCORE, MIN_SCORE } from "@/lib/constants";
+import { MAX_SCORE, MIN_SCORE, SCORE_STEP } from "@/lib/constants";
 import type { BeerPublic } from "@/lib/types";
 
 export function VoteDrawer({
@@ -56,7 +57,7 @@ export function VoteDrawer({
       const result = await castVote(participantId, beer.id, score);
       if (result.ok) {
         navigator.vibrate?.([20, 40, 20]);
-        toast.success(`Cerveza Nº ${beer.number} → ${score}/10 🍻`);
+        toast.success(`Cerveza Nº ${beer.number} → ${formatVote(score)}/10 🍻`);
         onOpenChange(false);
         router.refresh();
       } else {
@@ -89,7 +90,7 @@ export function VoteDrawer({
                 ref={scoreRef}
                 className="font-heading tabular text-8xl font-extrabold leading-none text-primary"
               >
-                {score}
+                {formatVote(score)}
               </span>
 
               <div className="w-full px-2">
@@ -97,7 +98,7 @@ export function VoteDrawer({
                   value={[score]}
                   min={MIN_SCORE}
                   max={MAX_SCORE}
-                  step={1}
+                  step={SCORE_STEP}
                   onValueChange={([v]) => bump(v)}
                   className="**:data-[slot=slider-thumb]:size-7"
                 />
