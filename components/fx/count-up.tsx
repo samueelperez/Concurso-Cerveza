@@ -10,6 +10,11 @@ export function formatScore(value: number, decimals = 1): string {
   return value.toFixed(decimals).replace(".", ",");
 }
 
+/** Nota de voto: "7" para enteros, "7,5" para medios puntos. */
+export function formatVote(value: number): string {
+  return value % 1 === 0 ? String(value) : formatScore(value, 1);
+}
+
 /** Número que cuenta de 0 al valor final con GSAP (formato español, coma decimal). */
 export function CountUp({
   value,

@@ -5,6 +5,7 @@ export const ADMIN_TOKEN = "gc-7f3a9d2e-admin-ok";
 
 export const MIN_SCORE = 1;
 export const MAX_SCORE = 10;
+export const SCORE_STEP = 0.5;
 
 export const DEFAULT_PARTICIPANTS = [
   "Javier",

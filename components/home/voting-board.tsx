@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Hourglass, Lock, Pencil, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { formatVote } from "@/components/fx/count-up";
 import { VoteDrawer } from "./vote-drawer";
 import type { BeerPublic, ContestStatus, Participant, Vote } from "@/lib/types";
 
@@ -161,7 +162,7 @@ export function VotingBoard({
               <span className="mt-1.5">
                 {myScore !== null ? (
                   <Badge className="tabular gap-1 bg-primary text-primary-foreground">
-                    <Star className="size-3 fill-current" /> {myScore}
+                    <Star className="size-3 fill-current" /> {formatVote(myScore)}
                   </Badge>
                 ) : locked ? (
                   <Badge variant="outline" className="text-muted-foreground">

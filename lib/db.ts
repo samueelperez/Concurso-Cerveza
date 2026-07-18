@@ -87,11 +87,21 @@ async function init() {
       id SERIAL PRIMARY KEY,
       participant_id INTEGER NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
       beer_id INTEGER NOT NULL REFERENCES beers(id) ON DELETE CASCADE,
-      score INTEGER NOT NULL CHECK (score BETWEEN 1 AND 10),
+      score NUMERIC(3,1) NOT NULL CHECK (score BETWEEN 1 AND 10),
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       UNIQUE (participant_id, beer_id)
     )`;
+
+  // Migración para bases de datos creadas cuando score era INTEGER
+  await q`
+    DO $$
+    BEGIN
+      IF (SELECT data_type FROM information_schema.columns
+          WHERE table_name = 'votes' AND column_name = 'score') = 'integer' THEN
+        ALTER TABLE votes ALTER COLUMN score TYPE NUMERIC(3,1);
+      END IF;
+    END $$`;
 
   await q`
     CREATE TABLE IF NOT EXISTS contest (
